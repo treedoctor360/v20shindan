@@ -1510,17 +1510,21 @@
           senderName:     settings.senderName || '',
         }]
       };
+      // [修正] Content-Typeをapplication/jsonに変更し、レスポンスチェックをより明確に
       const res = await fetch(settings.url, {
         method:  'POST',
-        headers: { 'Content-Type': 'text/plain' }, // GASはContent-Type: text/plainが確実
+        headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      // レスポンスのJSONを解析
       const data = await res.json();
-      if (data.status !== 'ok') throw new Error(data.message || '送信エラー');
+      // GAS側のjsonResponseでstatus='error'の場合、またはfetchが失敗した場合
+      if (!res.ok || data.status !== 'ok') {
+        throw new Error(data.message || `HTTP Error: ${res.status}`);
+      }
       return data;
     }
-
+    
     // 一括送信実行
     window.startGasBulkSend = async () => {
       const s = loadGasSettings();
